@@ -1,72 +1,56 @@
 # ServerTest
 
-# 회원가입
+## 회원가입
+
+### 요청
+> [POST] /users/signup
+
+전달값
 <pre>
-router.post("/signup", funtion(req, res, next)
 {
-    var userObj = req.body;
-    var name = userObj.name;
-    var id = userObj.id;
-    var pw = userObj.pw;
-
-    var db = req.app.get("database");
-
-    var users = db.collection("users");
-
-    users.insertOne({"name" : name, "id" : id, "pw" : pw} function(err, result)
-    {
-        if(err)
-        {
-            throw err;
-        }
-        if(result.ops.length > 0)
-        {
-            res.json(result.ops[0]);
-        }
-        else
-        {
-            res.json({message : "서버 에러"});
-        }
-    });
-});
+  "username" : "potato",
+  "id" : "potato12",
+  "pw" : "potatogood12"
+}
 </pre>
-
-# 로그인
+### 결과
+#### 성공
 <pre>
-router.post('/signin', function(req, res, next)
 {
-  var userObj = req.body;
-  var id = userObj.id;
-  var pw = userObj.pw;
+  "username" : "potato",
+  "id" : "potato12",
+  "pw" : "potatogood12"
+}
+</pre>
+#### 실패
+<pre>
+{
+  "message" : "400 Bad Request"
+}
+</pre>
+## 로그인
 
-  var db = req.app.get("database");
+### 요청
+> [POST] /users/signin
 
-  var users = db.collection("users");
+전달값
+<pre>
+{
+  "id" : "potato12",
+  "pw" : "potatogood12"
+}
+</pre>
+### 결과
 
-  if(users.findOne("id" : id))
-  {
-    users.findOne({"id" : id}, function(err, result)
-    {
-      if(err)
-      {
-        throw err;
-      }
-      users.findOne({"_id" : result._id}, function(err, result)
-      {
-        if(result.pw == pw)
-        {
-          res.json({message : "Login Succecs"});
-        }
-        else
-        {
-          res.json({message : "Invalid pw"})
-        }
-      });
-    });
-  }
-  else
-  {
-    res.json({message : "Invalid id"})
-  }
-});
+#### 성공
+<pre>
+{
+    "message" : "Login Success"
+}
+</pre>
+#### 실패
+<pre>
+{
+  "message" : "Login Fail"
+}
 </pre>
