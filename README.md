@@ -43,15 +43,15 @@ router.post('/signin', function(req, res, next)
 
   var users = db.collection("users");
 
-  if(users.id == id)
+  if(users.findOne("id" : id))
   {
-    users.find({"id" : id}, function(err, result)
+    users.findOne({"id" : id}, function(err, result)
     {
       if(err)
       {
         throw err;
       }
-      users.find({"_id" : result._id}, function(err, result)
+      users.findOne({"_id" : result._id}, function(err, result)
       {
         if(result.pw == pw)
         {

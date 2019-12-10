@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var mongodb = require('mongodb');
+var crypto = require('crypto');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -25,27 +25,26 @@ router.post('/signup', function(req, res, next)
 
   var userValidation = function(username, id, pw)
   {
-    //회원가입정보 확인
     if (username =="" || pw == "" || id == "")
     {
       res.json({message : "400 Bad Request"});
       return false;
     }
-    if (username.length < 4 || username.length > 12)
+    if (username.length < 4 || username.length > 20)
     {
       if(username.length <4)
       {
         res.json({message : "username is too Short"});
       }
-      else if(username.length > 12)
+      else if(username.length > 20)
       {
         res.json({message : "username is too long"});
       }
       return false;
     }
-    if (id.length < 4 || id.length > 12)
+    if (id.length < 6 || id.length > 12)
     {
-      if(id.length <4)
+      if(id.length < 6)
       {
         res.json({message : "id is too Short"});
       }
@@ -55,13 +54,13 @@ router.post('/signup', function(req, res, next)
       }
       return false;
     }
-    if (pw.length < 4 || pw.length > 12)
+    if (pw.length < 8 || pw.length > 20)
     {
-      if(pw.length <4)
+      if(pw.length < 8)
       {
         res.json({message : "Password is too Short"});
       }
-      else if(pw.length > 12)
+      else if(pw.length > 20)
       {
         res.json({message : "Password is too long"});
       }
@@ -77,10 +76,11 @@ router.post('/signup', function(req, res, next)
     res.json({message : "400 Bad Request"});
   }
 
-  var usersCollection = db.collection("users");
+  var users = db.collection("users");
 
-  //username, id 가 기존에 존재하는지 확인
-  usersCollection.count({ $or: [{"username" : username}, {"id" : id}]} , function(err , result)
+
+
+  users.count({ $or: [{"username" : username}, {"id" : id}]} , function(err , result)
   {
     if(err)
     {
@@ -92,7 +92,10 @@ router.post('/signup', function(req, res, next)
     }
     else
     {
-      usersCollection.insertOne({"username" : username, "id" : id, "pw" : pw}, function(err, result)
+      var salt = Math.round((new Date().valueOf() * Math.random())) + "";
+      var cryptopw = crypto.createHash("sha512").update(pw,salt).digest("base64");
+
+      users.insertOne({"username" : username, "id" : id, "pw" : cryptopw, "salt" : salt}, function(err, result)
       {
         if(err)
         {
@@ -127,19 +130,26 @@ router.post('/signin', function(req, res, next)
     return;
   } 
 
-  var usersCollection = db.collection("users");
+  var users = db.collection("users");
 
-  if(usersCollection.id == id)
+  if(users.findOne({"id" : id}))
   {
-    usersCollection.find({"id" : id}, function(err, result)
+    users.findOne({"id" : id}, function(err, result)
     {
       if(err)
       {
         throw err;
       }
-      usersCollection.find({"_id" : result._id}, function(err, result)
+      users.findOne({"_id" : result._id}, function(err, result)
       {
-        if(result.pw == pw)
+        var salt = Math.round((new Date().valueOf() * Math.random())) + "";
+        var cryptopw = crypto.createHash("sha512").update(pw,salt).digest("base64");
+
+        if(err)
+        {
+          throw err;
+        }
+        if(result.pw == cryptopw)
         {
           res.json({message : "Login Succecs"});
         }
